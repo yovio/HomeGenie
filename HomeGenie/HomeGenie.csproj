@@ -26,6 +26,8 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
     <ReleaseVersion>1.0</ReleaseVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <NuGetPackageImportStamp>4d1fa357</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -67,6 +69,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\HomeGenie_Windows\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\HomeGenie_Windows\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="ExpressionEvaluation">
       <HintPath>Externals\ExpressionEvaluation\ExpressionEvaluation.dll</HintPath>
     </Reference>
@@ -103,6 +111,18 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data.SQLite, Version=1.0.94.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\HomeGenie_Windows\packages\System.Data.SQLite.Core.1.0.94.0\lib\net45\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.EF6">
+      <HintPath>..\HomeGenie_Windows\packages\System.Data.SQLite.EF6.1.0.94.0\lib\net45\System.Data.SQLite.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.Linq, Version=1.0.94.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\HomeGenie_Windows\packages\System.Data.SQLite.Linq.1.0.94.1\lib\net45\System.Data.SQLite.Linq.dll</HintPath>
+    </Reference>
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -118,10 +138,6 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>Externals\json\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>Externals\sqlite\System.Data.SQLite.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="Common.Logging.Core">
       <HintPath>Externals\nmqtt\Common.Logging.Core.dll</HintPath>
@@ -234,6 +250,9 @@
     </None>
     <None Include="app.config" />
     <None Include="app.manifest" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -269,6 +288,10 @@
     <ProjectReference Include="..\MIG\MIG\MIG.csproj">
       <Project>{005357C9-7F8E-458E-AFFA-BF84F7D6A6AE}</Project>
       <Name>MIG</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MIG\Support Libraries\MySensors\MySensors.csproj">
+      <Project>{62cc1daa-6467-4138-b47c-b29aae36088e}</Project>
+      <Name>MySensors</Name>
     </ProjectReference>
     <ProjectReference Include="..\MIG\Support Libraries\TcpClientLib\TcpClientLib.csproj">
       <Project>{318D2523-3C8B-4273-B1EA-DE339868403C}</Project>
@@ -320,4 +343,11 @@
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
+  <Import Project="..\HomeGenie_Windows\packages\System.Data.SQLite.Core.1.0.94.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\HomeGenie_Windows\packages\System.Data.SQLite.Core.1.0.94.0\build\net45\System.Data.SQLite.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\HomeGenie_Windows\packages\System.Data.SQLite.Core.1.0.94.0\build\net45\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\HomeGenie_Windows\packages\System.Data.SQLite.Core.1.0.94.0\build\net45\System.Data.SQLite.Core.targets'))" />
+  </Target>
 </Project>
