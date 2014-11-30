@@ -297,13 +297,9 @@
       <Project>{005357C9-7F8E-458E-AFFA-BF84F7D6A6AE}</Project>
       <Name>MIG</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MIG\Support Libraries\MySensors\MySensors.csproj">
-      <Project>{62cc1daa-6467-4138-b47c-b29aae36088e}</Project>
-      <Name>MySensors</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MIG\Support Libraries\TcpClientLib\TcpClientLib.csproj">
-      <Project>{318D2523-3C8B-4273-B1EA-DE339868403C}</Project>
-      <Name>TcpClientLib</Name>
+    <ProjectReference Include="..\MigFiles\SupportLibraries\NetClientLib\NetClientLib.csproj">
+      <Project>{318d2523-3c8b-4273-b1ea-de339868403c}</Project>
+      <Name>NetClientLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\MigFiles\SupportLibraries\XTenLib\XTenLib.csproj">
       <Project>{92933BA1-609C-4DE0-B29E-FDA37C7DC0EF}</Project>
@@ -320,10 +316,6 @@
     <ProjectReference Include="..\MigFiles\SupportLibraries\W800RF32\W800RF32.csproj">
       <Project>{D98143B1-85B3-4F7F-AFCB-39D2B5DC6C6D}</Project>
       <Name>W800RF32</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MigFiles\SupportLibraries\NetClientLib\NetClientLib.csproj">
-      <Project>{318D2523-3C8B-4273-B1EA-DE339868403C}</Project>
-      <Name>NetClientLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

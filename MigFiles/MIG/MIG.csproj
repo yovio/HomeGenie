@@ -99,7 +99,7 @@
   </Target>
   -->
   <ItemGroup>
-    <ProjectReference Include="..\..\MIG\Support Libraries\MySensors\MySensors.csproj">
+    <ProjectReference Include="..\SupportLibraries\MySensors\MySensors.csproj">
       <Project>{62cc1daa-6467-4138-b47c-b29aae36088e}</Project>
       <Name>MySensors</Name>
     </ProjectReference>
