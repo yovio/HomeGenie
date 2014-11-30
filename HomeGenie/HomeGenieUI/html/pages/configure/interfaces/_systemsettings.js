@@ -56,6 +56,19 @@ HG.WebApp.SystemSettings.InitializePage = function () {
         //
         // Interfaces enable / disable switches
         //
+        $("#configure_interfaces_flip_mysensors").on('slidestop', function (event) {
+            HG.WebApp.SystemSettings.RefreshOptions('mysensors');
+            HG.Configure.MIG.InterfaceCommand('HomeAutomation.MySensors', 'IsEnabled.Set', $("#configure_interfaces_flip_mysensors").val(), '', function (data) {
+                $('#control_groupslist').empty(); // forces control menu rebuild
+                //if ($("#configure_interfaces_flip_mysensors").val() == '1' && $('#page_configure_interfaces_insteonport').val() == "") {
+                //    HG.WebApp.SystemSettings.ShowPortTip('#page_configure_interfaces_insteonport');
+                //}
+                //if ($("#configure_interfaces_flip_mysensors").val() == '1' && $('#page_configure_interfaces_insteonport').val() == "") {
+                //    HG.WebApp.SystemSettings.ShowPortTip('#page_configure_interfaces_insteonport');
+                //}
+            });
+        });
+        //
         $("#configure_interfaces_flip_zwave").on('slidestop', function (event) {
             HG.WebApp.SystemSettings.RefreshOptions('zwave');
         	HG.Configure.MIG.InterfaceCommand('HomeAutomation.ZWave', 'IsEnabled.Set', $("#configure_interfaces_flip_zwave").val(), '', function (data) {
@@ -309,7 +322,11 @@ HG.WebApp.SystemSettings.LoadSettings = function () {
             	$('#page_configure_interfaces_cameraresolution').selectmenu('refresh', true);
             	$('#page_configure_interfaces_camerafps').val(data.Fps);
             	$('#page_configure_interfaces_camerafps').selectmenu('refresh', true);
-            });
+	        });
+	        HG.Configure.MIG.InterfaceCommand('HomeAutomation.MySensors', 'IsEnabled.Get', '', '', function (data) {
+	            $('#configure_interfaces_flip_mysensors').val(data.ResponseValue).slider('refresh');
+	            HG.WebApp.SystemSettings.RefreshOptions('mysensors');
+	        });
         	HG.Configure.MIG.InterfaceCommand('HomeAutomation.ZWave', 'IsEnabled.Get', '', '', function (data) {
                 $('#configure_interfaces_flip_zwave').val(data.ResponseValue).slider('refresh');
                 HG.WebApp.SystemSettings.RefreshOptions('zwave');
