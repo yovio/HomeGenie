@@ -35,6 +35,7 @@ using HomeGenie.Automation.Scheduler;
 using Microsoft.Scripting.Hosting;
 using Newtonsoft.Json;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace HomeGenie.Automation
 {
@@ -55,7 +56,6 @@ namespace HomeGenie.Automation
 
         private HomeGenieService homegenie = null;
         private SchedulerService scheduler = null;
-        private CSharpAppFactory scriptingHost = null;
 
         private MacroRecorder macroRecorder = null;
 
@@ -102,7 +102,6 @@ namespace HomeGenie.Automation
         public ProgramEngine(HomeGenieService hg)
         {
             homegenie = hg;
-            scriptingHost = new CSharpAppFactory(homegenie);
             macroRecorder = new MacroRecorder(this);
             scheduler = new SchedulerService(this);
             scheduler.Start();
@@ -246,6 +245,9 @@ namespace HomeGenie.Automation
                 break;
             case "javascript":
                 errors = CompileJavascript(program);
+                break;
+            case "arduino":
+                errors = CompileArduino(program);
                 break;
             }
             return errors;
@@ -465,7 +467,7 @@ namespace HomeGenie.Automation
             }
         }
 
-        private void RaiseProgramModuleEvent(ProgramBlock program, string property, string value)
+        internal void RaiseProgramModuleEvent(ProgramBlock program, string property, string value)
         {
             var programModule = homegenie.Modules.Find(m => m.Domain == Domains.HomeAutomation_HomeGenie_Automation && m.Address == program.Address.ToString());
             if (programModule != null)
@@ -572,7 +574,7 @@ namespace HomeGenie.Automation
             System.CodeDom.Compiler.CompilerResults result = new System.CodeDom.Compiler.CompilerResults(null);
             try
             {
-                result = scriptingHost.CompileScript(program.ScriptCondition, program.ScriptSource, tmpfile);
+                result = CSharpAppFactory.CompileScript(program.ScriptCondition, program.ScriptSource, tmpfile);
                 if (File.Exists(program.AssemblyFile))
                 {
                     // delete old assebly
@@ -626,6 +628,39 @@ namespace HomeGenie.Automation
             return errors;
         }
 
+        private List<ProgramError> CompileArduino(ProgramBlock program)
+        {
+            List<ProgramError> errors = new List<ProgramError>();
+
+            // Generate, compile and upload Arduino Sketch
+            string sketchFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "programs", "arduino", program.Address.ToString(), "sketch_" + program.Address + ".cpp");
+            if (!Directory.Exists(Path.GetDirectoryName(sketchFileName)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(sketchFileName));
+            }
+            string sketchMakefile = Path.Combine(Path.GetDirectoryName(sketchFileName), "Makefile");
+
+            try
+            {
+                // .ino source is stored in the ScriptSource property
+                File.WriteAllText(sketchFileName, program.ScriptSource);
+                // Makefile source is stored in the ScriptCondition property
+                File.WriteAllText(sketchMakefile, program.ScriptCondition);
+                errors = ArduinoAppFactory.CompileSketch(sketchFileName, sketchMakefile);
+            }
+            catch (Exception e)
+            { 
+                errors.Add(new ProgramError() {
+                    Line = 0,
+                    Column = 0,
+                    ErrorMessage = "General failure: is 'arduino-mk' package installed?\n\n" + e.Message,
+                    ErrorNumber = "500",
+                    CodeBlock = "CR"
+                });
+            }
+
+            return errors;
+        }
 
         private bool VerifyProgramCondition(ProgramCondition c)
         {
@@ -732,7 +767,7 @@ namespace HomeGenie.Automation
                 //
                 if (double.TryParse(
                         parameter.Value.Replace(",", "."),
-                        NumberStyles.AllowDecimalPoint,
+                        NumberStyles.Float | NumberStyles.AllowDecimalPoint,
                         CultureInfo.InvariantCulture,
                         out dval
                     ))
@@ -740,7 +775,7 @@ namespace HomeGenie.Automation
                     lvalue = dval;
                     rvalue = double.Parse(
                         comparisonValue.Replace(",", "."),
-                        NumberStyles.AllowDecimalPoint,
+                        NumberStyles.Float | NumberStyles.AllowDecimalPoint,
                         CultureInfo.InvariantCulture
                     );
                 }

@@ -70,9 +70,14 @@ namespace HomeGenie.Automation
         private ScriptScope scriptScope = null;
         private ScriptingHost hgScriptingHost = null;
 
+        // System events handlers
+        internal Func<bool> SystemStarted = null;
+        internal Func<bool> SystemStopping = null;
         internal Func<HomeGenie.Automation.Scripting.ModuleHelper, HomeGenie.Data.ModuleParameter, bool> ModuleChangedHandler = null;
         internal Func<HomeGenie.Automation.Scripting.ModuleHelper, HomeGenie.Data.ModuleParameter, bool> ModuleIsChangingHandler = null;
         internal List<string> registeredApiCalls = new List<string>();
+
+        // Main program thread
         internal Thread ProgramThread;
 
         // wizard script public members
@@ -387,6 +392,45 @@ namespace HomeGenie.Automation
                     result = (MethodRunResult)methodRun.Invoke(assembly, new object[1] { options });
                 }
                 break;
+            case "arduino":
+                result = new MethodRunResult();
+                homegenie.LogBroadcastEvent(
+                    Domains.HomeAutomation_HomeGenie_Automation,
+                    this.Address.ToString(),
+                    "Arduino Sketch Upload",
+                    "Arduino.UploadOutput",
+                    "Upload started"
+                    );
+                string[] outputResult = ArduinoAppFactory.UploadSketch(Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    "programs",
+                    "arduino",
+                    this.Address.ToString()
+                )).Split('\n');
+                //
+                for (int x = 0; x < outputResult.Length; x++)
+                {
+                    if (!String.IsNullOrWhiteSpace(outputResult[x]))
+                    {
+                        homegenie.LogBroadcastEvent(
+                            Domains.HomeAutomation_HomeGenie_Automation,
+                            this.Address.ToString(),
+                            "Arduino Sketch",
+                            "Arduino.UploadOutput",
+                            outputResult[x]
+                        );
+                        Thread.Sleep(500);
+                    }
+                }
+                //
+                homegenie.LogBroadcastEvent(
+                    Domains.HomeAutomation_HomeGenie_Automation,
+                    this.Address.ToString(),
+                    "Arduino Sketch",
+                    "Arduino.UploadOutput",
+                    "Upload finished"
+                    );
+                break;
             }
             //
             return result;
@@ -453,7 +497,7 @@ namespace HomeGenie.Automation
         internal void Stop()
         {
             this.IsRunning = false;
-            //this.Reset();
+            this.Reset();
             //
             if (ProgramThread != null)
             {
@@ -473,6 +517,8 @@ namespace HomeGenie.Automation
             //
             ModuleIsChangingHandler = null;
             ModuleChangedHandler = null;
+            SystemStarted = null;
+            SystemStopping = null;
             //
             foreach (string apiCall in registeredApiCalls)
             {
