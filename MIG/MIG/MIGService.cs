@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net;
 using System.Text;
 using System.Linq;
@@ -168,7 +169,8 @@ namespace MIG
             MIGInterface migInterface = null;
             try
             {
-                var type = Type.GetType("MIG.Interfaces." + domain);
+                string typeName = "MIG.Interfaces." + domain;
+                var type = Type.GetType(typeName);
                 migInterface = (MIGInterface)Activator.CreateInstance(type);
                 isPresent = migInterface.IsDevicePresent();
             }
@@ -181,7 +183,8 @@ namespace MIG
             if (!Interfaces.ContainsKey(domain))
             {
                 MIGInterface migInterface = null;
-                var type = Type.GetType("MIG.Interfaces." + domain);
+                string typeName = "MIG.Interfaces." + domain;
+                var type = Type.GetType(typeName);
                 migInterface = (MIGInterface)Activator.CreateInstance(type);
                 migInterface.Options = configuration.GetInterface(domain).Options;
                 Interfaces.Add(domain, migInterface);
@@ -749,6 +752,5 @@ namespace MIG
         }
 
         #endregion
-
     }
 }

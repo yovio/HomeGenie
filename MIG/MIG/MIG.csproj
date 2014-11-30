@@ -10,6 +10,8 @@
     <AssemblyName>MIG</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ReleaseVersion>1.0</ReleaseVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +32,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
@@ -60,6 +64,7 @@
     <Compile Include="Gateways\TcpSocketGateway.cs" />
     <Compile Include="Gateways\WebServiceGateway.cs" />
     <Compile Include="Interfaces\EmbeddedSystems\Weeco4mGPIO.cs" />
+    <Compile Include="Interfaces\HomeAutomation\MySensors.cs" />
     <Compile Include="Interfaces\HomeAutomation\X10.cs" />
     <Compile Include="Interfaces\HomeAutomation\ZWave.cs" />
     <Compile Include="Interfaces\Media\CameraInput.cs" />
@@ -92,6 +97,10 @@
   </Target>
   -->
   <ItemGroup>
+    <ProjectReference Include="..\Support Libraries\MySensors\MySensors.csproj">
+      <Project>{62cc1daa-6467-4138-b47c-b29aae36088e}</Project>
+      <Name>MySensors</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Support Libraries\XTenLib\XTenLib.csproj">
       <Project>{92933BA1-609C-4DE0-B29E-FDA37C7DC0EF}</Project>
       <Name>XTenLib</Name>
