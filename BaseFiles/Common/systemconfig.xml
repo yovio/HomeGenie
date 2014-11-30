@@ -93,6 +93,9 @@
   </HomeGenie>
   <MIGService>
     <Interfaces>
+      <Interface Domain="HomeAutomation.MySensors" IsEnabled="false">
+        <Options />
+      </Interface>
       <Interface Domain="HomeAutomation.ZWave" IsEnabled="false">
         <Options>
           <Option Name="Port" Value="" />
