@@ -383,6 +383,7 @@ namespace HomeGenie.Service.Handlers
                         // Only restore user space programs
                         if (selectedPrograms.Contains("," + program.Address.ToString() + ",") && program.Address >= ProgramEngine.USER_SPACE_PROGRAMS_START)
                         {
+                            int oldPid = program.Address;
                             if (currentProgram == null)
                             {
                                 var newPid = ((currentProgram != null && currentProgram.Address == program.Address) ? homegenie.ProgramEngine.GeneratePid() : program.Address);
@@ -422,6 +423,26 @@ namespace HomeGenie.Service.Handlers
                                 }
                                 homegenie.ProgramEngine.ProgramAdd(program);
                             }
+                            // Restore Arduino program folder ...
+                            // TODO: this is untested yet...
+                            if (program.Type.ToLower() == "arduino")
+                            {
+                                string sourceFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                                                                   "tmp",
+                                                                   "programs",
+                                                                   "arduino",
+                                                                   oldPid.ToString());
+                                string arduinoFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                                                                    "programs",
+                                                                    "arduino",
+                                                                    program.Address.ToString());
+                                if (Directory.Exists(arduinoFolder)) Directory.Delete(arduinoFolder, true);
+                                Directory.CreateDirectory(arduinoFolder);
+                                foreach (string newPath in Directory.GetFiles(sourceFolder))
+                                {
+                                    File.Copy(newPath, newPath.Replace(sourceFolder, arduinoFolder), true);
+                                }
+                            }
                         }
                         else if (currentProgram != null && program.Address < ProgramEngine.USER_SPACE_PROGRAMS_START)
                         {
@@ -459,7 +480,7 @@ namespace HomeGenie.Service.Handlers
                 }
                 catch (Exception ex)
                 {
-                    migCommand.Response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
+                    migCommand.Response = JsonHelper.GetSimpleResponse("ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace);
                 }
                 break;
 
@@ -471,7 +492,7 @@ namespace HomeGenie.Service.Handlers
                 }
                 catch (Exception ex)
                 {
-                    migCommand.Response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
+                    migCommand.Response = JsonHelper.GetSimpleResponse("ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace);
                 }
                 break;
 
@@ -482,11 +503,11 @@ namespace HomeGenie.Service.Handlers
                     {
                         homegenie.Modules[m].RoutingNode = "";
                     }
-                    migCommand.Response = "OK";
+                    migCommand.Response = JsonHelper.GetSimpleResponse("OK");
                 }
                 catch (Exception ex)
                 {
-                    migCommand.Response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
+                    migCommand.Response = JsonHelper.GetSimpleResponse("ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace);
                 }
                 break;
 
@@ -644,7 +665,7 @@ namespace HomeGenie.Service.Handlers
                 }
                 catch (Exception ex)
                 {
-                    migCommand.Response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
+                    migCommand.Response = JsonHelper.GetSimpleResponse("ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace);
                 }
                 break;
 
@@ -664,16 +685,6 @@ namespace HomeGenie.Service.Handlers
                 {
                     migCommand.Response = JsonHelper.GetSimpleResponse("New name already in use.");
                 }
-                    /*
-                    try
-                    {
-                        cmd.response = JsonConvert.SerializeObject(cmd.option.ToLower() == "automation" ? _automationgroups : _controlgroups);
-                    }
-                    catch (Exception ex)
-                    {
-                        cmd.response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
-                    }
-                    */
                 break;
 
             case "Groups.Sort":
@@ -698,7 +709,7 @@ namespace HomeGenie.Service.Handlers
                 }
                 catch (Exception ex)
                 {
-                    migCommand.Response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
+                    migCommand.Response = JsonHelper.GetSimpleResponse("ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace);
                 }
                 break;
 
@@ -736,7 +747,7 @@ namespace HomeGenie.Service.Handlers
                 }
                 catch (Exception ex)
                 {
-                    migCommand.Response = "ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace;
+                    migCommand.Response = JsonHelper.GetSimpleResponse("ERROR: \n" + ex.Message + "\n\n" + ex.StackTrace);
                 }
                 break;
 

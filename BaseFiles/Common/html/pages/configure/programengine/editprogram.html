@@ -10,9 +10,9 @@
 
     <div data-role="navbar" style="position:absolute;top:115px;width:400px;margin-left:20px">
         <ul>
-          <li><a id="program_edit_tab1_button" style="border-top-left-radius: 16px;border-top-right-radius: 16px;border-bottom:0px;" href="#" onclick="HG.WebApp.ProgramEdit.SetTab(1)" data-ajax="false">Summary</a></li>
-          <li><a id="program_edit_tab2_button" style="border-top-left-radius: 16px;border-top-right-radius: 16px;border-bottom:0px;" href="#" onclick="HG.WebApp.ProgramEdit.SetTab(2)" data-ajax="false">Program Code</a></li>
-          <li><a id="program_edit_tab3_button" style="border-top-left-radius: 16px;border-top-right-radius: 16px;border-bottom:0px;" href="#" onclick="HG.WebApp.ProgramEdit.SetTab(3)" data-ajax="false">Trigger Code</a></li>
+          <li><a id="program_edit_tab1_button" style="border-top-left-radius: 16px;border-top-right-radius: 16px;border-bottom:0px;" href="#" onclick="HG.WebApp.ProgramEdit.SetTab(1)" data-ajax="false" data-locale-id="configure_program_summary">Summary</a></li>
+          <li><a id="program_edit_tab2_button" style="border-top-left-radius: 16px;border-top-right-radius: 16px;border-bottom:0px;" href="#" onclick="HG.WebApp.ProgramEdit.SetTab(2)" data-ajax="false" data-locale-id="configure_program_programcode">Program Code</a></li>
+          <li><a id="program_edit_tab3_button" style="border-top-left-radius: 16px;border-top-right-radius: 16px;border-bottom:0px;" href="#" onclick="HG.WebApp.ProgramEdit.SetTab(3)" data-ajax="false" data-locale-id="configure_program_triggercode">Trigger Code</a></li>
         </ul>
     </div>
     <div class="ui-content ui-btn ui-btn-active ui-corner-all" style="cursor:default;text-align:left;position:absolute;border-top:0px;padding:10px;bottom:30px;top:150px;left:0px;right:0px;margin:0;padding-top:0;overflow-x:hidden;overflow-y:auto" data-theme="d">
@@ -35,12 +35,12 @@
 	                    <div class="ui-block-a">
 				            <label data-locale-id="configure_program_programtype" for="automation_programtype">Program Type</label>
 	                        <select id="automation_programtype" onchange="HG.WebApp.ProgramsList.ChangeProgramType(this.value)">
-	                            <option _data-locale-id="configure_program_typewizard" value="Wizard">Wizard Script</option>
-	                            <option _data-locale-id="configure_program_typecsharp" value="CSharp">C# Program</option>
-	                            <option _data-locale-id="configure_program_typecsharp" value="Javascript">Javascript Script</option>
-	                            <option _data-locale-id="configure_program_typecsharp" value="Python">Python Script</option>
-	                            <option _data-locale-id="configure_program_typecsharp" value="Ruby">Ruby Script</option>
-                                <option _data-locale-id="configure_program_typearduino" value="Arduino">Arduino Sketch</option>
+	                            <option value="Wizard">Wizard Script</option>
+	                            <option value="CSharp">C# Program</option>
+	                            <option value="Javascript">Javascript Script</option>
+	                            <option value="Python">Python Script</option>
+	                            <option value="Ruby">Ruby Script</option>
+                                <option id="automation_programtype_option_arduino" value="Arduino">Arduino Sketch</option>
 	                        </select>
 	                    </div>
 	                    <div class="ui-block-b">
@@ -60,17 +60,22 @@
 	        <div data-block-id="configure_program_editfortypecsharp" style="display:none">
 	        	
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;left:4px;position:absolute;margin:0" data-theme="e">
-		        	<a id="configure_program_editorcompilecode" class="ui-btn ui-btn-icon-left ui-icon-check" href="#">Compile</a>
+		        	<a id="configure_program_editorcompilecode" class="ui-btn ui-btn-icon-left ui-icon-check" data-locale-id="configure_editprogram_compile" href="#">Compile</a>
 		        	<!--a id="configure_program_editorruncode" class="ui-btn ui-btn-icon-left ui-icon-arrow-r" href="#">Run</a -->
 	        	</div>
+                <div id="configure_program_editorsketch" data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;left:110px;position:absolute;margin:0;display:none" data-theme="e">
+                    <a id="configure_program_editorfiles" data-rel="popup" href="#automation_program_listfiles" class="ui-btn ui-btn-icon-left ui-icon-bullets" data-locale-id="configure_editprogram_files" href="#">Files</a>
+                    <span id="configure_program_editorfilename" style="margin-left:14px;font-size:18pt;font-weight:bold">main</span>
+                </div>
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;right:84px;position:absolute;margin:0" data-theme="f">
 		        	<a id="program_error_button" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-alert" href="#">Errors</a>
 	        	</div>
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;right:4px;position:absolute;margin:0" data-theme="e">
-		        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" target="_blank">Help</a>
+		        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" data-locale-id="configure-editprogram-help" target="_blank">Help</a>
 	        	</div>
 
 				<textarea id="automation_program_scriptsource" onkeydown="if (event.which == 9) { pasteIntoInput(this, '\t'); return false; }" spellcheck="false" style="postion:absolute;width:100%;height:100%"></textarea>
+                <textarea id="automation_program_sketchfile" onkeydown="if (event.which == 9) { pasteIntoInput(this, '\t'); return false; }" spellcheck="false" style="postion:absolute;width:100%;height:100%"></textarea>
 
 	        </div>
 
@@ -79,11 +84,11 @@
 	        <div data-block-id="configure_program_editfortypewizard" style="display:none;">
 	        
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="position:fixed;top:4px;left:4px;position:absolute;margin:0" data-theme="e">
-		        	<a href="#" onclick="automationpage_WizardCommandAdd();" class="ui-btn ui-btn-icon-left ui-icon-plus" href="#">Add command</a>
-		        	<a href="#automation_capture_command_popup" data-rel="popup" class="ui-btn ui-btn-icon-left ui-icon-eye" href="#">Capture</a>
+		        	<a href="#" onclick="automationpage_WizardCommandAdd();" data-locale-id="configure-editprogram-addcommand" class="ui-btn ui-btn-icon-left ui-icon-plus" href="#">Add command</a>
+		        	<a href="#automation_capture_command_popup" data-rel="popup" data-locale-id="configure-editprogram-capture" class="ui-btn ui-btn-icon-left ui-icon-eye" href="#">Capture</a>
 	        	</div>
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;right:4px;position:absolute;margin:0" data-theme="e">
-		        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" target="_blank">Help</a>
+		        	<a class="ui-btn ui-btn-icon-left ui-icon-info" data-locale-id="configure-editprogram-help" href="http://www.homegenie.it/docs/" target="_blank">Help</a>
 	        	</div>
 
 				<div style="border:1px solid white;position:absolute;top:45px;left:5px;right:5px;bottom:11px;overflow-y:auto;" class="ui-body-inherit">
@@ -102,7 +107,7 @@
 		<div id="program_edit_tab3" style="display:none">
 
         	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;left:4px;position:absolute;margin:0" data-theme="e">
-	        	<a id="configure_program_editorcompilecode2" class="ui-btn ui-btn-icon-left ui-icon-check" href="#">Compile</a>
+	        	<a id="configure_program_editorcompilecode2" class="ui-btn ui-btn-icon-left ui-icon-check" data-locale-id="configure_editprogram_compile" href="#">Compile</a>
         	</div>
             <div id="automation_conditiontype_wrapper">
         		<label data-locale-id="configure_program_triggertype" for="automation_conditiontype" style="top:14px;left:250px;position:absolute;margin:0">Trigger</label>
@@ -120,7 +125,7 @@
 	        	<a id="program_error_button2" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-alert" href="#">Errors</a>
         	</div>
         	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;right:4px;position:absolute;margin:0" data-theme="e">
-	        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" target="_blank">Help</a>
+	        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" data-locale-id="configure-editprogram-help" target="_blank">Help</a>
         	</div>
 
 	        <div data-block-id="configure_program_editfortypecsharp" style="display:none">
@@ -132,11 +137,11 @@
 	        <div data-block-id="configure_program_editfortypewizard" style="display:none;">
 
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="position:fixed;top:4px;left:4px;position:absolute;margin:0" data-theme="e">
-		        	<a href="#" onclick="automationpage_WizardConditionAdd();" class="ui-btn ui-btn-icon-left ui-icon-plus" href="#">Add condition</a>
-		        	<a href="#automation_capture_condition_popup" data-rel="popup" class="ui-btn ui-btn-icon-left ui-icon-eye" href="#">Capture</a>
+		        	<a href="#" onclick="automationpage_WizardConditionAdd();" data-locale-id="configure-editprogram-addcondition" class="ui-btn ui-btn-icon-left ui-icon-plus" href="#">Add condition</a>
+		        	<a href="#automation_capture_condition_popup" data-rel="popup" data-locale-id="configure-editprogram-capture" class="ui-btn ui-btn-icon-left ui-icon-eye" href="#">Capture</a>
 	        	</div>
 	        	<div data-role="controlgroup" data-type="horizontal" data-mini="true" style="top:4px;right:4px;position:absolute;margin:0" data-theme="e">
-		        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" target="_blank">Help</a>
+		        	<a class="ui-btn ui-btn-icon-left ui-icon-info" href="http://www.homegenie.it/docs/" data-locale-id="configure-editprogram-help" target="_blank">Help</a>
 	        	</div>
 
 				<div style="border:1px solid white;position:absolute;top:45px;left:5px;right:5px;bottom:11px;overflow-y:auto;" class="ui-body-inherit">
@@ -179,7 +184,26 @@
 
 
 
-    <div id="automation_program_delete" class="ui-corner-all" data-role="popup" data-overlay-theme="b">
+    <div id="automation_program_notsaved" class="ui-corner-all" data-role="popup" data-transition="pop" data-position-to="window" data-dismissible="false" data-overlay-theme="b">
+        <div data-role="header" class="ui-corner-top">
+            <h1 data-locale-id="configure_program_hasmodification">Program was modified!</h1>
+        </div>
+        <div class="ui-content ui-corner-bottom">
+            <h3 data-locale-id="configure_program_savechangesprompt" class="ui-title">Do you want to save changes?</h3>
+            <p data-locale-id="configure_program_changeswillbelost"></p>
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <a id="program_notsaved_dontsave" href="#" class="ui-btn ui-corner-all" data-locale-id="configure_program_dontsave" data-inline="true" data-rel="back">No</a>
+                </div>
+                <div class="ui-block-b">
+                    <a id="program_notsaved_save" href="#" class="ui-btn ui-corner-all" data-locale-id="configure_program_saveconfirm" data-inline="true" data-rel="back" data-transition="flow">Save</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="automation_program_delete" class="ui-corner-all" data-role="popup" data-transition="pop" data-overlay-theme="b">
         <div data-role="header" class="ui-corner-top">
             <h1 data-locale-id="configure_program_deletetitle">Delete Program?</h1>
         </div>
@@ -198,13 +222,58 @@
     </div>
 
 
+    
+    <div id="automation_program_fileadd" class="ui-corner-all hg-popup-a" data-role="popup" data-transition="pop" data-position-to="window" data-overlay-theme="b">
+        <div class="ui-corner-top" data-role="header">
+            <h2 data-locale-id="configure_program_newfile">Add File</h2>
+        </div>
+        <div class="ui-content ui-corner-bottom">
+            <h3 class="ui-title" data-locale-id="configure_program_filename">File name</h3>
+            <input id="programfile_new_name" type="text" />
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <a href="#" class="ui-btn ui-shadow ui-corner-all" data-locale-id="configure_program_newprogramcancel" data-rel="back">Cancel</a>
+                </div>
+                <div class="ui-block-b">
+                    <a id="programfile_new_button" href="#" class="ui-btn ui-shadow ui-corner-all" data-locale-id="configure_program_newprogramconfirm" data-transition="flow">Ok</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="automation_program_listfiles" class="ui-corner-all" data-role="popup" data-position-to="window" data-transition="pop" data-overlay-theme="b">
+        <div data-role="header" class="ui-corner-top">
+            <h1 data-locale-id="configure_program_fileslist">File list</h1>
+        </div>
+        <div class="ui-content ui-corner-bottom">
+            <ul id="automation_program_sketchfiles" data-role="listview" data-inset="false" style="height:180px;max-height:180px;overflow-y:scroll;overflow-x:hidden;"></ul>
+        </div>
+        <div class="ui-grid-c ui-footer ui-bar-inherit" align="center">
+            <div class="ui-block-a">
+                <a data-rel="back" class="ui-btn ui-icon-back ui-btn-icon-left ui-corner-all" data-locale-id="configure_program_fileslist_exit">Exit</a>
+            </div>
+            <div class="ui-block-b">
+                <a id="automation_program_sketchfiles_delete" class="ui-btn ui-icon-delete ui-btn-icon-left ui-corner-all" data-locale-id="configure_program_fileslist_delete">Delete</a>
+            </div>
+            <div class="ui-block-c">
+                <a id="automation_program_sketchfiles_edit" class="ui-btn ui-icon-edit ui-btn-icon-left ui-corner-all" data-locale-id="configure_program_fileslist_edit">Edit</a>
+            </div>
+            <div class="ui-block-d">
+                <a id="automation_program_sketchfiles_add" class="ui-btn ui-icon-plus ui-btn-icon-left ui-corner-all" data-locale-id="configure_program_fileslist_add">Add</a>
+            </div>
+        </div>
+    </div>
+
+
 
 
     <div id="editprograms_actionmenu" data-role="popup" data-overlay-theme="b">
         <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
-        <h5 align="center">Actions Menu</h5>
+        <h5 data-locale-id="actions_menu" align="center">Actions Menu</h5>
         <ul data-role="listview" data-inset="false" style="min-width:210px;">
-            <li><a id="automation_program_delete_button" class="ui-btn ui-icon-minus ui-btn-icon-right" data-position-to="window" data-transition="pop">Delete program</a></li>
+            <li><a id="automation_program_delete_button" class="ui-btn ui-icon-minus ui-btn-icon-right" data-locale-id="configure_editprogram_options_delete" data-position-to="window" data-transition="pop">Delete program</a></li>
             <li id="editprograms_actionmenu_run"><a class="ui-btn ui-icon-gear ui-btn-icon-right" data-locale-id="configure_program_options_run" href="javascript:HG.WebApp.ProgramEdit.CheckAndRunProgram(HG.WebApp.ProgramEdit._CurrentProgram);history.back();">Run</a></li>
             <li id="editprograms_actionmenu_break"><a class="ui-btn ui-icon-minus ui-btn-icon-right" data-locale-id="configure_program_options_break" href="javascript:HG.WebApp.ProgramEdit.BreakProgram(HG.WebApp.ProgramEdit._CurrentProgram.Address);history.back();">Break</a></li>
             <li><a class="ui-btn ui-icon-check ui-btn-icon-right" data-locale-id="configure_program_options_save" href="javascript:HG.WebApp.ProgramEdit.SaveProgram();history.back();">Save</a>
@@ -219,12 +288,12 @@
         <div data-role="navbar">
             <ul>
                 <li>
-                    <a id="editprograms_backbutton" class="ui-btn ui-icon-back ui-btn-icon-left" data-locale-id="bottombar_button_back" data-transition="slide" data-direction="reverse" href="#page_automation_programs">
+                    <a id="editprograms_backbutton" class="ui-btn ui-icon-back ui-btn-icon-left" data-locale-id="bottombar_button_back" data-transition="slide" data-direction="reverse" href="#">
                         Back
                     </a>
                 </li>
                 <li>
-                    <a class="ui-btn ui-icon-home ui-btn-icon-left" data-locale-id="bottombar_button_home" data-transition="slide" data-direction="reverse" href="#page_home">
+                    <a id="editprograms_homebutton" class="ui-btn ui-icon-home ui-btn-icon-left" data-locale-id="bottombar_button_home" data-transition="slide" data-direction="reverse" href="#">
                         Home
                     </a>
                 </li>
@@ -240,6 +309,7 @@
 
 </div>
 
+<!-- TODO: the following page is deprecated, should be deleted -->
 <div data-role="page" id="page_automation_editprogram_code">
 
     {include pages/header.html}
@@ -267,7 +337,7 @@
 
     <div id="editprograms_code_actionmenu" data-role="popup" data-overlay-theme="b">
         <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
-        <h5 align="center">Actions Menu</h5>
+        <h5 data-locale-id="actions_menu" align="center">Actions Menu</h5>
         <ul data-role="listview" data-inset="false" style="min-width:210px;">
             <li id="editprograms_actionmenu_run"><a class="ui-btn ui-btn-icon-right ui-icon-gear" data-locale-id="configure_program_options_run" href="javascript:HG.WebApp.ProgramEdit.CheckAndRunProgram(HG.WebApp.ProgramEdit._CurrentProgram);history.back();">Run</a></li>
             <li id="editprograms_actionmenu_break"><a class="ui-btn ui-btn-icon-right ui-icon-minus" data-locale-id="configure_program_options_break" href="javascript:HG.WebApp.ProgramEdit.BreakProgram(HG.WebApp.ProgramEdit._CurrentProgram.Address);history.back();">Break</a></li>

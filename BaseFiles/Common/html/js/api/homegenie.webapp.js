@@ -2,6 +2,7 @@ HG.WebApp = HG.WebApp || {};
 //
 HG.WebApp.Data = HG.WebApp.Data || {};
 //
+HG.WebApp.Data.Interfaces = Array();
 HG.WebApp.Data.Events = Array();
 HG.WebApp.Data.Modules = Array(); 
 HG.WebApp.Data.Groups = Array();  
@@ -17,11 +18,13 @@ HG.WebApp.Data.CurrentKw = -1;
 HG.WebApp.Data._CurrentGroup = null;
 HG.WebApp.Data._CurrentGroupIndex = 0;
 //
+HG.WebApp.Data._DefaultLocale = {};
 HG.WebApp.Data._CurrentLocale = {};
 //
 // Code Mirror editor instances (TODO: refactor these global vars to a better name)
 var editor1 = null;
 var editor2 = null;
+var editor3 = null;
 //
 // Speech Recognition objects
 var recognition = null;
@@ -51,6 +54,7 @@ HG.WebApp.InitializePage = function ()
     //
     HG.Configure.LoadData();
     //
+    HG.WebApp.Home.UpdateHeaderStatus();
     window.setInterval('HG.WebApp.Home.UpdateHeaderStatus();', 10000);
     //
     //HG.WebApp.SystemSettings.CheckConfigureStatus();
@@ -280,6 +284,21 @@ HG.WebApp.InitializePage = function ()
         mode: { globalVars: true },
         theme: 'ambiance'
     });
+    editor3 = CodeMirror.fromTextArea(document.getElementById('automation_program_sketchfile'), {
+        lineNumbers: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        extraKeys: {
+            "Ctrl-Q": function (cm) { cm.foldCode(cm.getCursor()); },
+            "Ctrl-Space": "autocomplete"
+        },
+        foldGutter: true,
+        gutters: ["CodeMirror-lint-markers-3", "CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        highlightSelectionMatches: { showToken: /\w/ },
+        mode: { globalVars: true },
+        theme: 'ambiance'
+    });
+    $(editor3.getWrapperElement()).hide();
     //
     // stacked message popups
     //
@@ -405,7 +424,7 @@ HG.WebApp.Home.UpdateInterfacesStatus = function()
         url: ifaceurl,
         data: "{ dummy: 'dummy' }",
         success: function (data) {
-            var interfaces = eval(data);
+            var interfaces = HG.WebApp.Data.Interfaces = eval(data);
             var status = '';
             var isupdateavailable = false;
             //
@@ -623,7 +642,7 @@ HG.WebApp.Utility.SwitchPopup = function(popup_id1, popup_id2, notransition) {
 HG.WebApp.Locales = HG.WebApp.Locales || {};
 HG.WebApp.Locales.GetUserLanguage = function()
 {
-    var userLang = (navigator.language) ? navigator.language : navigator.userLanguage;
+    var userLang = (navigator.languages ? navigator.languages[0] : (navigator.language || navigator.userLanguage));
     if (userLang.length > 2) userLang = userLang.substring(0, 2);
     return userLang;
 };
@@ -637,38 +656,130 @@ HG.WebApp.Locales.GetDateEndianType = function()
     if (localeDateParts[0] == '2') endianType = 'M';
     return endianType;
 };
+HG.WebApp.Locales.GetDefault = function(callback) {
+    $.ajax({
+        url: './locales/en.json',
+        data: "{ dummy: 'dummy' }",
+        success: function (data) {
+            HG.WebApp.Data._DefaultLocale = $.parseJSON( data );
+            callback();
+        }
+    });     
+};
 HG.WebApp.Locales.Localize = function(container, langurl)
 {
     // get data via ajax 
     // store it in 		HG.WebApp.Data._CurrentLocale
     // and replace locales strings in the current page
+    HG.WebApp.Locales.GetDefault(function(){
+        $.ajax({
+            url: langurl,
+            data: "{ dummy: 'dummy' }",
+            success: function (data) {
+                HG.WebApp.Data._CurrentLocale = $.parseJSON( data );
+                //
+                $(container).find('[data-locale-id]').each(function(index){
+                    var stringid = $(this).attr('data-locale-id');
+                    var text = HG.WebApp.Locales.GetLocaleString(stringid);
+                    if (text != null) {
+                        $this = $(this);
+                        if( $this.is('a') && $('span.ui-btn-text', $this).is('span') ) {
+                            $('span.ui-btn-text', $this).text(text);
+                        }
+                        else if( $this.is('input') ) {
+                            $this.attr("placeholder", text);
+                        }
+                        else {
+                            $(this).html(text);
+                        }
+                    }
+                });
+            }
+        });
+    });		
+};
+HG.WebApp.Locales.LocalizeWidget = function(widgetpath, elementid) {
+    var userLang = HG.WebApp.Locales.GetUserLanguage();
+    widgetpath = widgetpath.substring(0, widgetpath.lastIndexOf('/'));
+    var container = '#' + elementid;
+    var langurl = 'pages/control/widgets/' + widgetpath + '/locales/' + userLang.toLowerCase().substring(0, 2) + '.json';
     $.ajax({
         url: langurl,
         data: "{ dummy: 'dummy' }",
         success: function (data) {
-            HG.WebApp.Data._CurrentLocale = $.parseJSON( data );
-            //
+            var locale = $.parseJSON( data );
+            $(container).find('[data-ui-field=widget]').data('Locale', locale);
+
             $(container).find('[data-locale-id]').each(function(index){
                 var stringid = $(this).attr('data-locale-id');
-                var text = HG.WebApp.Locales.GetLocaleString(stringid);
+                var text = HG.WebApp.Locales.FindLocaleString(locale, stringid);
                 if (text != null) {
                     $this = $(this);
                     if( $this.is('a') && $('span.ui-btn-text', $this).is('span') ) {
                         $('span.ui-btn-text', $this).text(text);
+                    }
+                    else if( $this.is('input') ) {
+                        $this.attr("placeholder", text);
                     }
                     else {
                         $(this).html(text);
                     }
                 }
             });
+            // localizable strings
+            $(container).find('[data-localizable]').each(function(index){
+                var stringid = $(this).text();
+                var text = HG.WebApp.Locales.FindLocaleString(locale, stringid);
+                if (text != null) {                    
+                    $(this).text(text);                    
+                }
+            });
+            // try to localize widget's popups if they were already processed by jQuery popup() function
+            var popups = $(container).find('[data-ui-field=widget]').data('ControlPopUp');
+            popups.each(function (index) {
+                var popup = $(this);
+                $(popup).find('[data-locale-id]').each(function(index){
+                    var stringid = $(this).attr('data-locale-id');
+                    var text = HG.WebApp.Locales.FindLocaleString(locale, stringid);
+                    if (text != null) {
+                        $this = $(this);
+                        if( $this.is('a') && $('span.ui-btn-text', $this).is('span') ) {
+                            $('span.ui-btn-text', $this).text(text);
+                        }
+                        else if( $this.is('input') ) {
+                            $this.attr("placeholder", text);
+                        }
+                        else {
+                            $(this).html(text);
+                        }
+                    }
+                });
+            });
         }
-    });		
+    });
 };
-HG.WebApp.Locales.LocalizeWidget = function(widgetpath, elementid) {
-    var userLang = HG.WebApp.Locales.GetUserLanguage();
-    widgetpath = widgetpath.substring(0, widgetpath.lastIndexOf('/'));
-    HG.WebApp.Locales.Localize('#' + elementid, 'pages/control/widgets/' + widgetpath + '/locales/' + userLang.toLowerCase().substring(0, 2) + '.json');
-};
+HG.WebApp.Locales.FindLocaleString = function(locale, stringid) {
+    var text = null;
+    $.each(locale, function(key, value) {
+        if (key == stringid)
+        {
+            text = value;
+            return false; // break each
+        }
+    });
+    if (text == null)
+    {
+        console.log("WIDGET LOCALIZATION ERROR " + stringid + ' == ' + text + '!!!');
+    }
+    return text;
+}
+HG.WebApp.Locales.GetWidgetLocaleString = function(widget, stringId){
+    var retval = null;
+    if(typeof(widget.data("Locale")) == "undefined")
+        return retval;
+    retval = HG.WebApp.Locales.FindLocaleString(widget.data("Locale"), stringId);
+    return retval;
+}
 HG.WebApp.Locales.GetLocaleString = function(stringid)
 {
     var retval = null;
@@ -679,11 +790,24 @@ HG.WebApp.Locales.GetLocaleString = function(stringid)
             return false; // break each
         }
     });
+    if (retval == null)
+    {
+        $.each(HG.WebApp.Data._DefaultLocale, function(key, value) {
+            if (key == stringid)
+            {
+                retval = value;
+                return false; // break each
+            }
+        });
+        if (retval == null)
+        {
+            console.log("LOCALIZATION ERROR " + stringid + ' == ' + retval + '!!!'); 
+        }
+    }
     return retval;
 }
 HG.WebApp.Locales.GenerateTemplate = function()
 {
-    //
     var localestring = '';
     $(document).find('[data-locale-id]').each(function(index){
         var stringid = $(this).attr('data-locale-id');
@@ -693,7 +817,6 @@ HG.WebApp.Locales.GenerateTemplate = function()
             localestring += '\t\"' + stringid + '\": \n\t\t \"' + value + '\",\n';
         }
     });
-    alert( localestring );
-    //
+    console.log( localestring );
 };
 	

@@ -3,26 +3,53 @@ HG.WebApp.ProgramEdit._CurrentProgram = Array();
 HG.WebApp.ProgramEdit._CurrentProgram.Name = 'New Program';
 HG.WebApp.ProgramEdit._CurrentProgram.Conditions = Array(); 
 HG.WebApp.ProgramEdit._CurrentProgram.Commands = Array(); 
+HG.WebApp.ProgramEdit._CurrentSketchFile = '';
+HG.WebApp.ProgramEdit._CurrentErrors = [];
 HG.WebApp.ProgramEdit._IsCapturingConditions = false;
 HG.WebApp.ProgramEdit._IsCapturingCommands = false;
+HG.WebApp.ProgramEdit._SavePromptCallback = null;
 HG.WebApp.ProgramEdit._CurrentTab = 1;
 
 HG.WebApp.ProgramEdit.InitializePage = function () 
 	{
 		$('#page_automation_editprogram').on('pageinit', function (e) {
+            if (HOST_SYSTEM.substring(0, 3) == 'Win')
+            {
+                $('#automation_programtype_option_arduino').hide();
+            }
+            //
 			$('#program_delete_button').bind('click', function (event) {
 				HG.WebApp.ProgramEdit.DeleteProgram( HG.WebApp.ProgramEdit._CurrentProgram.Address );
                 return true;
             });
-//            $('#editprograms_backbutton').on('click', function() {
-//                history.back();
-//                return false;
-//            });
+            //
+            $('#editprograms_backbutton').on('click', function() {
+                HG.WebApp.ProgramEdit.CheckIsClean(function(){
+                    $.mobile.changePage('#page_automation_programs', { transition: 'slide', reverse: true });
+                });
+                return false;
+            });
+            $('#editprograms_homebutton').on('click', function() {
+                HG.WebApp.ProgramEdit.CheckIsClean(function(){
+                    $.mobile.changePage('#page_home', { transition: 'slide', reverse: true });
+                });
+                return false;
+            });            
+            $('#program_notsaved_save').on('click', function() {
+                HG.WebApp.ProgramEdit.SaveProgram(function(){
+                    HG.WebApp.ProgramEdit._SavePromptCallback();
+                });
+                return false;
+            });
+            $('#program_notsaved_dontsave').on('click', function() {
+                HG.WebApp.ProgramEdit._SavePromptCallback();
+                return false;
+            });
             //
             $('#automation_program_delete_button').bind('click', function (event) {
 				HG.WebApp.Utility.SwitchPopup('#editprograms_actionmenu', '#automation_program_delete');
                 return true;
-            });
+            });editor1
 			//
 			$('#configure_program_editorcompilecode').bind('click', function (event) {
 				HG.WebApp.ProgramEdit.CompileProgram();
@@ -136,12 +163,85 @@ HG.WebApp.ProgramEdit.InitializePage = function ()
                 }
                 $('#automation_commandtarget').listview('refresh');//trigger('create');
             });
-            //HG.WebApp.ProgramEdit.CompileProgram
-            $('#automation_target_popup').on('popupbeforeposition', function (event) {
+            //
+            // Arduino Sketch files management
+            $('#automation_program_listfiles').on('popupbeforeposition', function (event) {
+                HG.WebApp.ProgramEdit.SketchFileList();
+            });
+            $('#automation_program_sketchfiles_add').bind('click', function(event) {
+                $('#programfile_new_name').val('');
+                HG.WebApp.Utility.SwitchPopup('#automation_program_listfiles', '#automation_program_fileadd', true);
+            });
+            $('#programfile_new_button').bind('click', function(event) {
+                $('#automation_program_fileadd').popup('close');
+                var filename = $('#programfile_new_name').val();
+                $.mobile.loading('show', { text: 'Adding file ' + filename, textVisible: true, theme: 'a', html: '' });
+                HG.Automation.Programs.ArduinoFileAdd(HG.WebApp.ProgramEdit._CurrentProgram.Address, filename, function(res){
+                    if (res == 'EXISTS')
+                    {
+                        $.mobile.loading('show', { text: 'A file named "' + filename + '" already exists', textVisible: true, theme: 'a', html: '' });
+                        setTimeout(function(){
+                            $.mobile.loading('hide');
+                        }, 3000);
+                    }
+                    else if (res == 'INVALID_NAME')
+                    {
+                        $.mobile.loading('show', { text: 'Invalid file name "' + filename + '". Must ends with .c, .cpp, .h or have no extension.', textVisible: true, theme: 'a', html: '' });
+                        setTimeout(function(){
+                            $.mobile.loading('hide');
+                        }, 3000);
+                    }
+                    else
+                    {
+                        $.mobile.loading('hide');
+                        HG.WebApp.ProgramEdit.SketchFileOpen(filename);
+                    }
+                });
+            });
+            $('#automation_program_sketchfiles_edit').bind('click', function(event) {
+                $('#automation_program_listfiles').popup('close');
+                var filename = $('#automation_program_sketchfiles li a.ui-btn-active').attr('data-context-value');
+                HG.WebApp.ProgramEdit.SketchFileOpen(filename);
+            });
+            $('#automation_program_sketchfiles_delete').bind('click', function(event) {
+                var filename = $('#automation_program_sketchfiles li a.ui-btn-active').attr('data-context-value');
+                $.mobile.loading('show', { text: 'Deleting file ' + filename, textVisible: true, theme: 'a', html: '' });
+                HG.Automation.Programs.ArduinoFileDelete(HG.WebApp.ProgramEdit._CurrentProgram.Address, filename, function(res){
+                    HG.WebApp.ProgramEdit.SketchFileList();
+                    if (filename == HG.WebApp.ProgramEdit._CurrentSketchFile)
+                    {
+                        HG.WebApp.ProgramEdit.SketchFileOpen('main');
+                    }
+                    $.mobile.loading('hide');
+                });
             });
         });
 	};
 
+HG.WebApp.ProgramEdit.CheckIsClean = function(callback)
+    {
+        if (!HG.WebApp.ProgramEdit.IsClean())
+        {
+            HG.WebApp.ProgramEdit._SavePromptCallback = function(){
+                callback();
+            }
+            $('#automation_program_notsaved').popup('open');
+        }
+        else
+        {
+            callback();
+        }
+    };
+HG.WebApp.ProgramEdit.IsClean = function()
+    {   
+        var isClean = (HG.WebApp.ProgramEdit._CurrentProgram.Group == $('#automation_programgroup').val());
+        isClean = isClean && (HG.WebApp.ProgramEdit._CurrentProgram.Name == $('#automation_programname').val());
+        isClean = isClean && (HG.WebApp.ProgramEdit._CurrentProgram.Description == $('#automation_programdescription').val());
+        isClean = isClean && (HG.WebApp.ProgramEdit._CurrentProgram.ConditionType == $('#automation_conditiontype').val());
+        isClean = isClean && editor1.isClean() && editor2.isClean() && editor3.isClean();
+        // TODO: add checking of Wizard type programs Conditions and Commands too
+        return isClean;
+    };
 HG.WebApp.ProgramEdit.GetDomainControllableModules = function (domain, showall)
     {
         var mods = Array();
@@ -272,12 +372,12 @@ HG.WebApp.ProgramEdit.ProgramEnable = function (pid, isenabled)
 	};
 
 
-HG.WebApp.ProgramEdit.UpdateProgram = function (programblock, compile)
+HG.WebApp.ProgramEdit.UpdateProgram = function (programblock, compile, callback)
 	{
 		//$('#configure_program_editorruncode').addClass('ui-disabled');
 		$('#configure_program_editorcompilecode').addClass('ui-disabled');
 		$('#configure_program_editorcompilecode2').addClass('ui-disabled');
-	    $.mobile.loading('show', { text: 'Updating program data', textVisible: true, theme: 'a', html: '' });
+	    $.mobile.loading('show', { text: HG.WebApp.Locales.GetLocaleString('configure_editprogram_saving'), textVisible: true, theme: 'a', html: '' });
 		$('#control_groupslist').empty();
 		$.ajax({
 			type: 'POST',
@@ -286,27 +386,26 @@ HG.WebApp.ProgramEdit.UpdateProgram = function (programblock, compile)
 			data: JSON.stringify(programblock),
 			success: function (response) {
 				$.mobile.loading('hide');
-				//$('#configure_program_editorruncode').removeClass('ui-disabled');
+                editor1.markClean();
+                editor2.markClean();
 				$('#configure_program_editorcompilecode').removeClass('ui-disabled');
 				$('#configure_program_editorcompilecode2').removeClass('ui-disabled');
 				if (response.trim() != '' && response.trim() != '[]')
 				{
-					//$('#proHG.WebApp.ProgramEdit.UpdateProgramgram_barbutton_run').attr('disabled', 'disabled');
-				    //$('#program_barbutton_run').button().button('refresh');
-				    $.mobile.loading('show', { text: 'Error updating program!', textVisible: true });
+				    $.mobile.loading('show', { text: HG.WebApp.Locales.GetLocaleString('configure_editprogram_error_updating'), textVisible: true });
 					HG.WebApp.ProgramEdit.ShowProgramErrors(response);
 				}
 				else
 				{
-					//$('#program_barbutton_run').removeAttr('disabled');
-				    //$('#program_barbutton_run').button().button('refresh');
-				    $.mobile.loading('show', { text: 'Saving succeed.', textVisible: true });
+				    $.mobile.loading('show', { text: HG.WebApp.Locales.GetLocaleString('configure_editprogram_saving_succeed'), textVisible: true });
 				    HG.WebApp.ProgramEdit.RefreshProgramEditorTitle();
-					//HG.WebApp.ProgramEdit.HideProgramErrors();
 				}
-				setTimeout(function () { $.mobile.loading('hide'); }, 2000);
+				setTimeout(function () { 
+                    $.mobile.loading('hide'); 
+                    if (callback != null && typeof callback != 'undefined') callback();
+                }, 2000);
 			    //
-	            // update modules
+	            // update module list from server
 	            //TODO: make this better...
 	            setTimeout(function () {
 	                HG.Configure.Modules.List(function (data) {
@@ -320,7 +419,6 @@ HG.WebApp.ProgramEdit.UpdateProgram = function (programblock, compile)
 			},
 			error: function (a, b, c) {
 				$.mobile.loading('hide');
-				//$('#configure_program_editorruncode').removeClass('ui-disabled');
 				$('#configure_program_editorcompilecode').removeClass('ui-disabled');
 				$('#configure_program_editorcompilecode2').removeClass('ui-disabled');
 			    //
@@ -339,7 +437,9 @@ HG.WebApp.ProgramEdit.JumpToLine = function (blockType, position)
 		}
 		else
 		{
+            HG.WebApp.ProgramEdit.SketchFileOpen('main');
 			HG.WebApp.ProgramEdit.SetTab(2);
+            
 		}
 		editor.focus();
 		editor.setCursor(0);
@@ -358,8 +458,10 @@ HG.WebApp.ProgramEdit.JumpToLine = function (blockType, position)
 
 HG.WebApp.ProgramEdit.ShowProgramErrors = function (message)
     {
+        HG.WebApp.ProgramEdit._CurrentErrors = [];
         editor1.clearGutter('CodeMirror-lint-markers-1');
         editor2.clearGutter('CodeMirror-lint-markers-2');
+        editor3.clearGutter('CodeMirror-lint-markers-3');
         //
         if (typeof (message) == 'undefined') message == '';
         HG.WebApp.ProgramEdit._CurrentProgram.ScriptErrors = message;
@@ -374,17 +476,6 @@ HG.WebApp.ProgramEdit.ShowProgramErrors = function (message)
             }
         }
         //
-        /*
-		var errs = message.split('\n');
-		var msgs = '';
-		for (x = 0; x < errs.length; x++)
-		{
-			if (errs[x].trim() != '')
-			{
-				msgs += '<b>' + (x + 1) + '.</b> ' + errs[x] + '<br/>';
-			}
-		}*/
-		//
 		var errors = null;
 		try
 		{
@@ -393,39 +484,42 @@ HG.WebApp.ProgramEdit.ShowProgramErrors = function (message)
         //
 		if (errors != null)
 		{
+            HG.WebApp.ProgramEdit._CurrentErrors = errors;
 		    var currentLine = 0, currentBlock = '', marker = null, message = '', popupMessage = '';
-		    for (var e = 0; e < errors.length; e++)
+		    for (var e = 0; e < HG.WebApp.ProgramEdit._CurrentErrors.length; e++)
 		    {
-		        var err = errors[e];
-		        if (currentLine != err.Line || currentBlock != err.CodeBlock)
+		        var err = HG.WebApp.ProgramEdit._CurrentErrors[e];
+		        if (err.Line > 0)
 		        {
-		            if (marker != null)
-		            {
-		                $(marker).qtip({
-		                    content: { title: 'Error', text: message, button: 'Close' },
-		                    show: { event: 'mouseover', solo: true },
-		                    hide: 'mouseout',
-		                    style: { classes: 'qtip-red qtip-shadow qtip-rounded qtip-bootstrap' }
-		                });
-		                message = '';
-		            }
-		            marker = document.createElement('div');
-		            marker.className = 'CodeMirror-lint-marker-error';
-		            if (err.CodeBlock == 'TC') // TC = Trigger Code
-		            {
-		                editor1.setGutterMarker(err.Line - 1, 'CodeMirror-lint-markers-1', marker);
-		            }
-		            else // CR = Code to Run = Program Code
-		            {
-		                editor2.setGutterMarker(err.Line - 1, 'CodeMirror-lint-markers-2', marker);
-		            }
-		            currentLine = err.Line;
-		            currentBlock = err.CodeBlock;
+                    if (currentLine != err.Line || currentBlock != err.CodeBlock)
+                    {
+    		            if (marker != null)
+    		            {
+    		                $(marker).qtip({
+    		                    content: { title: 'Error', text: message, button: 'Close' },
+    		                    show: { event: 'mouseover', solo: true },
+    		                    hide: 'mouseout',
+    		                    style: { classes: 'qtip-red qtip-shadow qtip-rounded qtip-bootstrap' }
+    		                });
+    		                message = '';
+    		            }
+    		            marker = document.createElement('div');
+    		            marker.className = 'CodeMirror-lint-marker-error';
+    		            if (err.CodeBlock == 'TC') // TC = Trigger Code
+    		            {
+    		                editor1.setGutterMarker(err.Line - 1, 'CodeMirror-lint-markers-1', marker);
+    		            }
+    		            else // CR = Code to Run = Program Code
+    		            {
+    		                editor2.setGutterMarker(err.Line - 1, 'CodeMirror-lint-markers-2', marker);
+    		            }
+    		            currentLine = err.Line;
+    		            currentBlock = err.CodeBlock;
+                    }
+                    message += '<b>(' + err.Line + ',' + err.Column + '):</b> ' + err.ErrorMessage + '</br>';
+                    popupMessage += '<b><a href="javascript:HG.WebApp.ProgramEdit.JumpToLine(\'' + err.CodeBlock + '\', { line: ' + (err.Line - 1) + ', ch: ' + (err.Column - 1) + ' })">Line ' + err.Line + ', Column ' + err.Column + '</a></b> (<font style="color:' + (err.CodeBlock == 'TC' ? 'yellow">Trigger' : 'lime">Code') + '</font>):<br/>';
 		        }
-		        message += '<b>(' + err.Line + ',' + err.Column + '):</b> ' + err.ErrorMessage + '</br>';
-                //
-		        popupMessage += '<b><a href="javascript:HG.WebApp.ProgramEdit.JumpToLine(\'' + err.CodeBlock + '\', { line: ' + (err.Line - 1) + ', ch: ' + (err.Column - 1) + ' })">Line ' + err.Line + ', Column ' + err.Column + '</a></b> (<font style="color:' + (err.CodeBlock == 'TC' ? 'yellow">Trigger Code' : 'lime">Program Code') + '</font>):<br/>';
-		        popupMessage += '&nbsp;&nbsp;&nbsp;&nbsp;<em>' + err.ErrorMessage.replace(/\n/g, '</br>&nbsp;&nbsp;&nbsp;&nbsp;') + '</em><br /><br />';
+	            popupMessage += '&nbsp;&nbsp;&nbsp;&nbsp;<em>' + err.ErrorMessage.replace(/\n/g, '</br>&nbsp;&nbsp;&nbsp;&nbsp;') + '</em><br /><br />';
             }
 		    if (marker != null) {
 		        $(marker).qtip({
@@ -435,13 +529,18 @@ HG.WebApp.ProgramEdit.ShowProgramErrors = function (message)
 		            style: { classes: 'qtip-red qtip-shadow qtip-rounded qtip-bootstrap' }
 		        });
 		    }
+            //
+            // Build external file errors (editor3 used for external sketch files)
+            //
+            HG.WebApp.ProgramEdit.ShowExternalErrors();
 		    //
-		    //$('#program_error_message_text').html(popupMessage);
+		    // Set message on "Errors" button
 		    if (popupMessage != '')
 		    {
 			    $('#program_error_button').show();
 			    $('#program_error_button2').show();
 			    //
+                // message popup on "Error" button (Tab 2)
 			    $('#program_error_button').qtip({
 			            content: { title: 'Error', text: popupMessage, button: 'Close' },
 			            show: { event: 'mouseover', ready: (HG.WebApp.ProgramEdit._CurrentTab == 2 ? true : false), delay: 500 },
@@ -450,6 +549,7 @@ HG.WebApp.ProgramEdit.ShowProgramErrors = function (message)
 			            position: { adjust : { screen: true }, my: 'top center', at: 'bottom center' }
 			        });
 			    //
+                // message popup on "Error" button (Tab 3)
 			    $('#program_error_button2').qtip({
 			            content: { title: 'Error', text: popupMessage, button: 'Close' },
 			            show: { event: 'mouseover', ready: (HG.WebApp.ProgramEdit._CurrentTab == 3 ? true : false), delay: 500 },
@@ -463,23 +563,68 @@ HG.WebApp.ProgramEdit.ShowProgramErrors = function (message)
 			    $('#program_error_button').hide();
 			    $('#program_error_button2').hide();
 			}
-		    //setTimeout(function () {
-		    //    if ($('#program_error_message_text').html() != '')
-		    //    {
-		    //        $('#program_error_message').popup().popup('open');
-		    //        $('#program_error_button').show(100);
-		    //    }
-		    //}, 2000);
+        }
+        else
+        {
+            HG.WebApp.ProgramEdit._CurrentErrors = [];
         }
         
         HG.WebApp.ProgramEdit.RefreshCodeMirror();                
 
 	};
+    
+HG.WebApp.ProgramEdit.ShowExternalErrors = function ()
+    {
+        editor3.clearGutter('CodeMirror-lint-markers-3');
+        var currentLine = 0, currentBlock = '', marker = null, message = '';
+        for (var l = 0; l < HG.WebApp.ProgramEdit._CurrentErrors.length; l++)
+        {
+            var errors = HG.WebApp.ProgramEdit._CurrentErrors[l].ErrorMessage.split('\n');
+        for (var e = 0; e < errors.length; e++)
+        {
+            var err = errors[e];
+            var lineParts = err.split(':');
+            
+            if (lineParts.length > 3 && lineParts[0] == HG.WebApp.ProgramEdit._CurrentSketchFile && $.isNumeric(lineParts[1]) && $.isNumeric(lineParts[2]))
+            {
+                if (currentLine != lineParts[1] || currentBlock != err.CodeBlock)
+                {
+                    if (marker != null)
+                    {
+                        $(marker).qtip({
+                            content: { title: 'Error', text: message, button: 'Close' },
+                            show: { event: 'mouseover', solo: true },
+                            hide: 'mouseout',
+                            style: { classes: 'qtip-red qtip-shadow qtip-rounded qtip-bootstrap' }
+                        });
+                        message = '';
+                    }
+                    marker = document.createElement('div');
+                    marker.className = 'CodeMirror-lint-marker-error';
+                    editor3.setGutterMarker(lineParts[1] - 1, 'CodeMirror-lint-markers-3', marker);
+                    currentLine = lineParts[1];
+                    currentBlock = err.CodeBlock;
+                }
+                message += err + '</br>';
+            }
+        }
+        }
+        if (marker != null) {
+            $(marker).qtip({
+                content: { title: 'Error', text: message, button: 'Close' },
+                show: { event: 'mouseover', solo: true },
+                hide: 'mouseout',
+                style: { classes: 'qtip-red qtip-shadow qtip-rounded qtip-bootstrap' }
+            });
+        }
+    };
 
 HG.WebApp.ProgramEdit.HideProgramErrors = function ()
 	{
+        HG.WebApp.ProgramEdit._CurrentErrors = [];
         editor1.clearGutter('CodeMirror-lint-markers-1');
         editor2.clearGutter('CodeMirror-lint-markers-2');
+        editor3.clearGutter('CodeMirror-lint-markers-3');
         //$('#program_error_message_text').html('');
         $('#program_error_button').hide();
         $('#program_error_button2').hide();
@@ -494,6 +639,7 @@ HG.WebApp.ProgramEdit.RefreshCodeMirror = function() {
         setTimeout(function(){
             editor1.refresh();
             editor2.refresh();
+            editor3.refresh();
         }, 500);
         
     };
@@ -501,13 +647,35 @@ HG.WebApp.ProgramEdit.RefreshCodeMirror = function() {
 HG.WebApp.ProgramEdit.CompileProgram = function () {
         HG.WebApp.ProgramEdit.HideProgramErrors();
         var programblock = HG.WebApp.ProgramEdit.SetProgramData();
-	    HG.WebApp.ProgramEdit.UpdateProgram(programblock, true);
+        //
+        if (HG.WebApp.ProgramEdit._CurrentProgram.Type.toLowerCase() == 'arduino')
+        {
+            // save other opened sketch files before compiling
+            HG.WebApp.ProgramEdit.SketchFileSave(function(){
+                HG.WebApp.ProgramEdit.UpdateProgram(programblock, true);
+            });
+        }
+        else
+        {
+            HG.WebApp.ProgramEdit.UpdateProgram(programblock, true);
+        }
     };
-HG.WebApp.ProgramEdit.SaveProgram = function () {
+HG.WebApp.ProgramEdit.SaveProgram = function (callback) {
         $('#program_error_button').hide();
         $('#program_error_button2').hide();
         var programblock = HG.WebApp.ProgramEdit.SetProgramData();
-	    HG.WebApp.ProgramEdit.UpdateProgram(programblock, false);
+        //
+        if (HG.WebApp.ProgramEdit._CurrentProgram.Type.toLowerCase() == 'arduino')
+        {
+            // save other opened sketch files before compiling
+            HG.WebApp.ProgramEdit.SketchFileSave(function(){
+                HG.WebApp.ProgramEdit.UpdateProgram(programblock, false, callback);
+            });
+        }
+        else
+        {
+            HG.WebApp.ProgramEdit.UpdateProgram(programblock, false, callback);
+        }
 	};
 HG.WebApp.ProgramEdit.SetProgramData = function () {
         HG.WebApp.AutomationGroupsList._CurrentGroup = $('#automation_programgroup').val();
@@ -631,3 +799,86 @@ HG.WebApp.ProgramEdit.SetTab = function (tabindex)
         //        
         HG.WebApp.ProgramEdit.RefreshCodeMirror();                
 	};
+
+// Arduino Sketch File management
+HG.WebApp.ProgramEdit.SketchFileSelect = function(el)
+{
+    $('#automation_program_sketchfiles li a').removeClass('ui-btn-active');
+    $(el).addClass('ui-btn-active');
+    $('#automation_program_sketchfiles_edit').removeClass('ui-disabled');
+    $('#automation_program_sketchfiles_delete').addClass('ui-disabled');
+    if ($(el).attr('data-context-value') != 'main')
+    {
+        $('#automation_program_sketchfiles_delete').removeClass('ui-disabled');
+    }
+};
+HG.WebApp.ProgramEdit.SketchFileOpen = function(filename)
+{
+    // first save any other currently opened file
+    HG.WebApp.ProgramEdit.SketchFileSave(function(){
+        $.mobile.loading('show', { text: 'Opening file ' + filename, textVisible: true, theme: 'a', html: '' });
+        if (filename == null || typeof(filename) == 'undefined' || filename == '' || filename == 'main')
+        {
+            // the main sketch file is stored in standard code editor (editor2)
+            HG.WebApp.ProgramEdit._CurrentSketchFile = '';
+            $('#configure_program_editorfilename').html(filename);
+            $(editor3.getWrapperElement()).hide();
+            $(editor2.getWrapperElement()).show();
+            editor2.clearHistory();
+            editor2.markClean();
+            editor2.refresh();
+            $.mobile.loading('hide');
+        }
+        else
+        {
+            // all other sketch files are stored in editor3
+            $(editor2.getWrapperElement()).hide();
+            $(editor3.getWrapperElement()).show();
+            // load specified file into editor
+            HG.Automation.Programs.ArduinoFileLoad(HG.WebApp.ProgramEdit._CurrentProgram.Address, filename, function(src){
+                HG.WebApp.ProgramEdit._CurrentSketchFile = filename;
+                $('#configure_program_editorfilename').html(filename);
+                editor3.setValue(src);
+                editor3.clearHistory();
+                editor3.markClean();
+                editor3.refresh();
+                HG.WebApp.ProgramEdit.ShowExternalErrors();
+                $.mobile.loading('hide');
+            });
+        }
+    });
+};
+HG.WebApp.ProgramEdit.SketchFileSave = function(callback)
+{
+    if (HG.WebApp.ProgramEdit._CurrentSketchFile == '') 
+    {
+        if (callback != null) callback();
+        return;
+    }
+    $.mobile.loading('show', { text: 'Saving file ' + HG.WebApp.ProgramEdit._CurrentSketchFile, textVisible: true, theme: 'a', html: '' });
+    var srcfile = editor3.getValue();
+    HG.Automation.Programs.ArduinoFileSave(
+        HG.WebApp.ProgramEdit._CurrentProgram.Address, 
+        HG.WebApp.ProgramEdit._CurrentSketchFile, 
+        srcfile,
+        function(src){
+            $.mobile.loading('hide');
+            if (callback != null) callback();
+        }
+    );                        
+};
+HG.WebApp.ProgramEdit.SketchFileList = function()
+{
+    $('#automation_program_sketchfiles_edit').addClass('ui-disabled');
+    $('#automation_program_sketchfiles_delete').addClass('ui-disabled');
+    HG.Automation.Programs.ArduinoFileList(HG.WebApp.ProgramEdit._CurrentProgram.Address, function(list){
+        $('#automation_program_sketchfiles').empty();
+        $('#automation_program_sketchfiles').append('<li data-icon="false"><a ondblclick="HG.WebApp.ProgramEdit.SketchFileOpen(\'main\');$(\'#automation_program_listfiles\').popup(\'close\');" onclick="HG.WebApp.ProgramEdit.SketchFileSelect(this)" href="#" data-context-value="main"><strong>Main Sketch Code</strong></a></li>');
+        if (typeof(list) != 'undefined' && list != null)
+        for(var f = 0; f < list.length; f++)
+        {
+            $('#automation_program_sketchfiles').append('<li data-icon="false"><a data-context-value="' + list[f] + '" ondblclick="HG.WebApp.ProgramEdit.SketchFileOpen(\'' + list[f] + '\');$(\'#automation_program_listfiles\').popup(\'close\');" onclick="HG.WebApp.ProgramEdit.SketchFileSelect(this)" href="#">' + list[f] + '</a></li>');
+        }
+        $('#automation_program_sketchfiles').listview('refresh');
+    });
+};

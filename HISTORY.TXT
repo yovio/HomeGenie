@@ -1,5 +1,53 @@
 ﻿RELEASE HISTORY
 
+15/12/2014 1.00 beta rev 446
+    - Added Hard Reset option to Z-Wave interface settings (UI)
+    - Added ZWaveLib Controller.SoftReset and Controller.HardReset functions
+    - Made some cleanup around ZWaveLib
+
+14/12/2014 1.00 beta rev 444
+    - Improved widget localization function
+    - Added Z-Wave.Me thermostat widget
+    - Added node timeout error message to ZWaveLib
+    - Fixed ZWaveLib bug affecting nodes discovery
+
+12/12/2014 1.00 beta rev 443
+    - Added save prompt when leaving the program editor page with unsaved modifications
+    - Fixed bug in Z-Wave multi instance app
+    - Fixed modules sorting bug
+    - Updated Raspberry Pi GPIO Modules app
+    - Fixed issue #59 and issue #61
+
+08/12/2014 1.00 beta rev 442
+    - Fixed import/export of automation programs of type "arduino" (will be zip bundle instead of simple hgx)
+    - Fixed bug in program editor undo history handling (was not reset when switching between files)
+    - Fixed bug when loading program files larger than 32K
+    - Fixed wrong isConnected assigment order in SerialPortLib
+
+04/12/2014 1.00 beta rev 441
+    - Added "MiLight Control" app
+    - Fixed bug in interconnections remote module control
+    - Some minor fixes to previous commit
+
+03/12/2014 1.00 beta rev 440
+    - Updated Generic Thermostat and Philips Hue app; added ZWave Thermostat poll app
+    - Added automatic hiding of options/programs when not enabled on current system configuration
+    - Added "{hostos}" keyword to MIG web service gateway preprocessor
+    - Closes github issue #55
+
+02/12/2014 1.00 beta rev 439
+    - Completed Arduino Sketch file manager
+    - Merged github pull request #56 from Bounz (some fixes to ZWave thermostat handler)
+
+01/12/2014 1.00 beta rev 438
+    - Updated completed russian translation
+    - Adding file manager for Arduino Sketch (wip)
+
+30/11/2014 1.00 beta rev 435
+    - Fixed wrong assembly reference (TcpClientLib instead of NetClientLib) in CSharpAppFactory.cs
+    - Some other bug fixing to localization functions
+    - Merged pull request #53 from github : Interface localization improvements, preliminary ZWaveMe.Thermostat support by Bounz
+
 29/11/2014 1.00 beta rev 434
     - Added UdpClientHelper (contributed by smeghead)
     - Added jSettings for client side settings persistence (issue #51)

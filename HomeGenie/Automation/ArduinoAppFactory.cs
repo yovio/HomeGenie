@@ -87,7 +87,7 @@ namespace HomeGenie.Automation
                                 });
                             }
                         }
-                        else if (!String.IsNullOrWhiteSpace(line) && !line.Contains("depends.mk:"))
+                        else if (!String.IsNullOrWhiteSpace(line) && !line.Contains("depends.mk:") && (line.Contains("error") || line.Contains(" *** ")))
                         {
                             errorOutput += line + "\n";
                         }
@@ -99,7 +99,7 @@ namespace HomeGenie.Automation
                         errors.Add(new ProgramError() {
                             Line = 0,
                             Column = 0,
-                            ErrorMessage = "Build failure: please check the Makefile; ensure BOARD_TAG is correct and ARDUINO_LIBS is referencing libraries needed by this sketch.\n\n" + errorOutput,
+                            ErrorMessage = errorOutput, // "Build failure: please check the Makefile; ensure BOARD_TAG is correct and ARDUINO_LIBS is referencing libraries needed by this sketch.\n\n" + errorOutput,
                             ErrorNumber = "130",
                             CodeBlock = "CR"
                         });
@@ -141,7 +141,7 @@ namespace HomeGenie.Automation
                 string[] outputFile = File.ReadAllText(Path.Combine(sketchDirectory, "uploadres.txt")).Split('\n');
                 for(int l = 0; l < outputFile.Length; l++)
                 {
-                    if (outputFile[l].StartsWith("avrdude") && outputFile[l].IndexOf(":") > 0)
+                    if ((outputFile[l].StartsWith("avrdude") && outputFile[l].IndexOf(":") > 0) || outputFile[l].Contains(" *** "))
                     {
                         string logLine = outputFile[l].Substring(outputFile[l].IndexOf(":") + 1);
                         errorOutput += logLine + "\n";
@@ -156,6 +156,29 @@ namespace HomeGenie.Automation
             //    throw(new IOException(errorOutput));
             //}
             return errorOutput;
+        }
+
+        public static string GetSketchFile(string address)
+        {
+            string filename = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "programs",
+                "arduino",
+                address,
+                "sketch_" + address + ".cpp"
+            );
+            return filename;
+        }
+
+        public static bool IsValidProjectFile(string filename)
+        {
+            bool isValid = !Path.GetFileName(filename).StartsWith("sketch_") && 
+                Path.GetFileName(filename) != "Makefile" &&
+                (filename.EndsWith(".cpp")
+                || filename.EndsWith(".c")
+                || filename.EndsWith(".h")
+                || !filename.Contains("."));
+            return isValid;
         }
 
     }

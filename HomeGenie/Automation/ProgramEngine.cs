@@ -398,6 +398,12 @@ namespace HomeGenie.Automation
             program.IsEnabled = false;
             program.Stop();
             automationPrograms.Remove(program);
+            // delete program files
+            string file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "programs");
+            // remove csharp assembly
+            try { File.Delete(Path.Combine(file, program.Address + ".dll")); } catch { }
+            // remove arduino folder files 
+            try { Directory.Delete(Path.Combine(file, "arduino", program.Address.ToString()), true); } catch { }
         }
 
         // TODO: find a better solution to this...
@@ -633,7 +639,7 @@ namespace HomeGenie.Automation
             List<ProgramError> errors = new List<ProgramError>();
 
             // Generate, compile and upload Arduino Sketch
-            string sketchFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "programs", "arduino", program.Address.ToString(), "sketch_" + program.Address + ".cpp");
+            string sketchFileName = ArduinoAppFactory.GetSketchFile(program.Address.ToString());
             if (!Directory.Exists(Path.GetDirectoryName(sketchFileName)))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(sketchFileName));

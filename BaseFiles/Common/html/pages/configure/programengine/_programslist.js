@@ -135,7 +135,7 @@ HG.WebApp.ProgramsList.RefreshProgramDetails = function ()
             }
 	        if (params != '')
 	        {
-	        	params = '</br><ul data-role="listview"><li data-role="list-divider">Implemented Features</li>' + params + '</ul></br>';
+	        	params = '</br><ul data-role="listview"><li data-role="list-divider">' + HG.WebApp.Locales.GetLocaleString('configure_program_details_implemfeatures') + '</li>' + params + '</ul></br>';
 	        	fieldparams.append(params);
         	}
 	 	} 
@@ -159,7 +159,7 @@ HG.WebApp.ProgramsList.RefreshProgramDetails = function ()
 	        }
 	        if (params != '')
 	        {
-	        	params = '</br><ul data-role="listview"><li data-role="list-divider">Configuration Options</li>' + params + '</ul></br>';
+	        	params = '</br><ul data-role="listview"><li data-role="list-divider">' + HG.WebApp.Locales.GetLocaleString('configure_program_details_configoptions') + '</li>' + params + '</ul></br>';
 	        	fieldparams.append(params);
         	}
     	}
@@ -180,7 +180,7 @@ HG.WebApp.ProgramsList.RefreshProgramDetails = function ()
 	        }
 	        if (params != '')
 	        {
-	        	params = '</br><ul data-role="listview"><li data-role="list-divider">Module Parameters</li>' + params + '</ul></br>';
+	        	params = '</br><ul data-role="listview"><li data-role="list-divider">' + HG.WebApp.Locales.GetLocaleString('configure_program_details_moduleparams') + '</li>' + params + '</ul></br>';
 	        	fieldparams.append(params);
         	}
 	        //
@@ -295,6 +295,7 @@ HG.WebApp.ProgramsList.SetProgramType = function ()
     {
         HG.WebApp.ProgramEdit._CurrentProgram.ScriptErrors = '';
         if (HG.WebApp.ProgramEdit._CurrentProgram.Type.toLowerCase() == 'arduino') {
+            // in arduino type program we use editor1 for makefile, editor2 for main sketch file and editor3 for all other c++ files
             editor1.setValue([
                 'ARDUINO_DIR = /usr/share/arduino\n',
                 '# Specify your board tag',
@@ -386,21 +387,32 @@ HG.WebApp.ProgramsList.RefreshProgramType = function ()
 			$('[data-block-id=configure_program_editfortypecsharp]').css('display', 'none');
         }
 
-        // set standard labels/options for current programming language
+        // set standard editors and labels/options
         $('#automation_conditiontype_wrapper').show();
-        $('#program_edit_tab2_button').html('Program Code');
-        $('#program_edit_tab3_button').html('Trigger Code');
-
+        // hide arduino editor
+        $(editor2.getWrapperElement()).show();
+        $(editor3.getWrapperElement()).hide();
+        $('#configure_program_editorsketch').hide();
+        //
+        $('#program_edit_tab2_button').html(HG.WebApp.Locales.GetLocaleString('configure_program_programcode'));
+        $('#program_edit_tab3_button').html(HG.WebApp.Locales.GetLocaleString('configure_program_triggercode'));
+        //
+        // switch specific language editors/labels/tools
         if (HG.WebApp.ProgramEdit._CurrentProgram.Type.toLowerCase() != 'wizard') {
             $('#automation_conditiontype').val('OnTrue');
             $('#automation_conditiontype').selectmenu().selectmenu('refresh');
             // set example code text for the current programming language
             if (HG.WebApp.ProgramEdit._CurrentProgram.Type.toLowerCase() == 'arduino') {
+                $(editor2.getWrapperElement()).show();
+                $(editor3.getWrapperElement()).hide();
+                $('#configure_program_editorsketch').show();
                 $('#automation_conditiontype_wrapper').hide();
-                $('#program_edit_tab2_button').html('Sketch Code');
-                $('#program_edit_tab3_button').html('Makefile');
+                $('#program_edit_tab2_button').html(HG.WebApp.Locales.GetLocaleString('configure_program_sketchcode'));
+                $('#program_edit_tab3_button').html(HG.WebApp.Locales.GetLocaleString('configure_program_makefile'));
+                editor3.setOption('mode', 'text/x-csrc');
                 editor2.setOption('mode', 'text/x-csrc');
                 editor1.setOption('mode', 'text/x-python');
+                HG.WebApp.ProgramEdit.SketchFileOpen('main');
             }                    
             else if (HG.WebApp.ProgramEdit._CurrentProgram.Type.toLowerCase() == 'python') {
                 editor2.setOption('mode', 'text/x-python');
@@ -449,7 +461,7 @@ HG.WebApp.ProgramsList.RefreshPrograms = function () {
 	var automationtitle = HG.WebApp.Locales.GetLocaleString('configure_program_automationtitle');
 	$('#configure_automation_group_title').html('<font style="color:gray">' + (automationtitle != null ? automationtitle : 'Automation')+ '</font><br />' + HG.WebApp.AutomationGroupsList._CurrentGroup);
 	$('#configure_programslist').empty();
-	$('#configure_programslist').append('<li data-icon="false" data-role="list-divider">Programs List</li>');
+	$('#configure_programslist').append('<li data-icon="false" data-role="list-divider">'+HG.WebApp.Locales.GetLocaleString('configure_programslist_listtitle')+'</li>');
 	//
 	for (i = 0; i < HG.WebApp.Data.Programs.length; i++) {
 	    var progrm = HG.WebApp.Data.Programs[i];
@@ -473,7 +485,7 @@ HG.WebApp.ProgramsList.RefreshPrograms = function () {
 	    item += '	<h3 class="ui-li-heading"><img src="images/common/led_' + status + '.png" style="width:24px;height:24px;vertical-align:middle;margin-bottom:5px;margin-right:5px;" /> ' + pname + '</h3>';
 	    item += '	<p class="ui-li-desc">' + (progrm.Description != null ? progrm.Description : '') + ' &nbsp;</p>';
 	    item += '</a>';
-	    item += '<a href="javascript:HG.WebApp.ProgramsList.ToggleProgramIsEnabled(\'' + progrm.Address + '\')">' + (progrm.IsEnabled ? 'Tap to DISABLE program' : 'Tap to ENABLE program') + '</a>';
+	    item += '<a href="javascript:HG.WebApp.ProgramsList.ToggleProgramIsEnabled(\'' + progrm.Address + '\')">' + (progrm.IsEnabled ? HG.WebApp.Locales.GetLocaleString('configure_programslist_tap_disable') : HG.WebApp.Locales.GetLocaleString('configure_programslist_tap_enable') ) + '</a>';
 	    //
 	    item += '</li>';
 	    $('#configure_programslist').append(item);
@@ -506,7 +518,7 @@ HG.WebApp.ProgramsList.UpdateOptionsPopup = function()
         $('#automationprograms_program_btn_export').show();
     }
     //
-    $.mobile.loading('show', { text: 'Loading Program data', textVisible: true, theme: 'a', html: '' });
+    $.mobile.loading('show', { text: HG.WebApp.Locales.GetLocaleString('update_options_popup_loading'), textVisible: true, theme: 'a', html: '' });
     HG.Automation.Programs.List(function () {
         HG.Configure.Modules.List(function (data) {
             try {
@@ -623,6 +635,13 @@ HG.WebApp.ProgramsList.EditProgram = function ()
 				//
 				editor1.setValue(HG.WebApp.ProgramEdit._CurrentProgram.ScriptCondition);
 				editor2.setValue(HG.WebApp.ProgramEdit._CurrentProgram.ScriptSource);
+                // clear old edit history
+                editor1.clearHistory();
+                editor1.markClean();
+                editor2.clearHistory();
+                editor2.markClean();
+                editor3.clearHistory();
+                editor3.markClean();
 				//
 				HG.WebApp.ProgramEdit._CurrentProgram.ConditionType = HG.WebApp.Data.Programs[i].ConditionType;
 				//
@@ -710,8 +729,10 @@ HG.WebApp.ProgramsList.ToggleProgramIsEnabled = function (paddr) {
 HG.WebApp.ProgramsList.DeleteGroup = function (group) {
     $.mobile.loading('show');
     HG.Configure.Groups.DeleteGroup('Automation', group, function () {
-        $.mobile.changePage($('#page_configure_automationgroups'), { transition: "slide" });
         $.mobile.loading('hide');
+        setTimeout(function(){
+            $.mobile.changePage($('#page_configure_automationgroups'));
+        }, 200);
     });
 };
 

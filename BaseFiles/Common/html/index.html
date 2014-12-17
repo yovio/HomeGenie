@@ -92,7 +92,8 @@
     {include js/api/homegenie.inc.js}
 
     <script type="text/javascript">
-
+        
+        var HOST_SYSTEM = '{hostos}';
         $(document).ready(function (e) {
 
             //
@@ -213,8 +214,8 @@
 	    <div style="float:left;" id="interfaces_status"></div>
 	    <!-- Event Logs button -->
 	    <div id="btn_eventshistory_led" style="float:left;display:none;margin-top:2px">
-	        <a data-locale-id="home_menu_events" href="#page_events" data-transition="slide"><img id="event_status_on" src="images/event_on.png" style="display:none" /></a>
-	        <a data-locale-id="home_menu_events" href="#page_events" data-transition="slide"><img id="event_status_off" src="images/event_off.png" /></a>
+	        <a href="#page_events" data-transition="slide"><img id="event_status_on" src="images/event_on.png" style="display:none" /></a>
+	        <a href="#page_events" data-transition="slide"><img id="event_status_off" src="images/event_off.png" /></a>
 	    </div>
     </div>
 
@@ -379,8 +380,8 @@
             <p id="automationprograms_program_description"></p>
             <div data-role="navbar">
                 <ul id="automationprograms_program_options_list">
-                    <li id="automationprograms_program_options_tab0"><a href="javascript:HG.WebApp.ProgramsList.SetOptionsTab(0)" class="ui-btn-active">Options</a></li>
-                    <li id="automationprograms_program_options_tab1"><a href="javascript:HG.WebApp.ProgramsList.SetOptionsTab(1)">Details</a></li><!-- Implemented Parameters, Features and Virtual Modules -->
+                    <li id="automationprograms_program_options_tab0"><a href="javascript:HG.WebApp.ProgramsList.SetOptionsTab(0)" data-locale-id="configure_program_options" class="ui-btn-active">Options</a></li>
+                    <li id="automationprograms_program_options_tab1"><a href="javascript:HG.WebApp.ProgramsList.SetOptionsTab(1)" data-locale-id="configure_program_options_details">Details</a></li><!-- Implemented Parameters, Features and Virtual Modules -->
                 </ul>
             </div><!-- /navbar -->
 

@@ -4,6 +4,7 @@ HG.WebApp.Maintenance = HG.WebApp.Maintenance || {};
 
 HG.WebApp.Maintenance.InitializePage = function () {
     $('#page_configure_maintenance').on('pageinit', function (e) {
+
         $('#systemsettings_httpport_change').bind('click', function () {
             var port = $('#http_service_port').val();
             $.mobile.loading('show');
@@ -95,7 +96,7 @@ HG.WebApp.Maintenance.InitializePage = function () {
         //    
         //});
         $('#configure_system_updatemanager_installbutton').bind('click', function () {
-            $('#configure_system_updateinstall_button').removeClass('ui-disabled');
+            $('#configure_system_updateinstall_button').addClass('ui-disabled');
             $('#configure_system_updatemanager_info').html('<strong>Downloading files...</strong>');
             $('#configure_system_updateinstall_log').empty();
             $('#systemsettings_updateinstall_popup').popup('open');
@@ -261,6 +262,7 @@ HG.WebApp.Maintenance.InitializePage = function () {
                 $.mobile.loading('hide');
             });
         });
+        
     });
 };
 

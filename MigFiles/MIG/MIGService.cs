@@ -522,6 +522,9 @@ namespace MIG
                             context.Response.ContentType += "; charset=" + cachedItem.Encoding.BodyName;
                             string body = cachedItem.Content;
                             //
+                            // expand preprocessor tags
+                            body = body.Replace("{hostos}", Environment.OSVersion.Platform.ToString());
+                            //
                             bool tagFound;
                             do
                             {

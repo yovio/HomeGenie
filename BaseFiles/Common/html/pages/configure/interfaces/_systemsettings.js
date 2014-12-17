@@ -2,6 +2,13 @@ HG.WebApp.SystemSettings = HG.WebApp.SystemSettings || {};
 
 HG.WebApp.SystemSettings.InitializePage = function () {
     $('#page_configure_interfaces').on('pageinit', function (e) {
+        if (HOST_SYSTEM.substring(0, 3) == 'Win')
+        {
+            $('[data-locale-id=configure_interfaces_lircremote]').hide().next().hide();
+            $('[data-locale-id=configure_interfaces_camera]').hide().next().hide();
+            $('[data-locale-id=configure_interfaces_weeco4mgpio]').hide().next().hide();
+        }
+        //    
         $('#systemsettings_zwaveoperation_popup').on('popupbeforeposition', function (event) {
             $('#systemsettings_zwaveoperation_close_button').addClass('ui-disabled');
             $('#systemsettings_zwaveoperation_nodeid').html('<span style="color:green">waiting</span>');
@@ -10,6 +17,9 @@ HG.WebApp.SystemSettings.InitializePage = function () {
         //
         $('#page_configure_interfaces_zwaveport').change(function (event) {
             HG.Configure.MIG.InterfaceCommand('HomeAutomation.ZWave', 'Options.Set', 'Port', encodeURIComponent($(this).val()));
+        });    
+        $('#systemsettings_zwavehardreset_hardresetbutton').bind('click', function () {
+            HG.WebApp.SystemSettings.ZWaveHardReset();
         });
         //
         $('#page_configure_interfaces_insteonport').change(function (event) {
@@ -37,9 +47,9 @@ HG.WebApp.SystemSettings.InitializePage = function () {
             else {
 				$('#page_configure_interfaces_x10housecodes').qtip({
 			        content: {
-			        	title: 'Notice',
-			        	text: 'Please select at least one house code.',
-			        	button: 'Close'
+			        	title: HG.WebApp.Locales.GetLocaleString('systemsettings_x10housecodes_title'),
+			        	text: HG.WebApp.Locales.GetLocaleString('systemsettings_x10housecodes_text'),
+			        	button: HG.WebApp.Locales.GetLocaleString('systemsettings_x10housecodes_button')
 			    	},
 			        show: { event: false, ready: true, delay: 500 },
 			        events: {
@@ -204,12 +214,26 @@ HG.WebApp.SystemSettings.InitializePage = function () {
     });
 };
 
+HG.WebApp.SystemSettings.GetInterface = function (domain) {
+    var iface = null;
+    var interfaces = HG.WebApp.Data.Interfaces;
+    if (interfaces && interfaces != 'undefined') {
+        for (i = 0; i < interfaces.length; i++) {
+            if (interfaces[i].Domain == domain) {
+                iface = interfaces[i];
+                break;
+            }
+        }
+    }
+    return iface;
+};
+
 HG.WebApp.SystemSettings.ShowPortTip = function (el) {
     $(el).qtip({
         content: {
-        	title: 'Notice',
-        	text: 'Please select port used by this device.',
-        	button: 'Close'
+        	title: HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_title'),
+        	text: HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_text'),
+        	button: HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_button')
     	},
         show: { event: false, ready: true, delay: 1000 },
         events: {
@@ -283,7 +307,7 @@ HG.WebApp.SystemSettings.LoadSettings = function () {
     HG.Configure.Interfaces.ServiceCall("Hardware.SerialPorts", function (data) {
         var ports = eval(decodeURIComponent(data));
         $('#page_configure_interfaces_zwaveport').empty();
-        $('#page_configure_interfaces_zwaveport').append('<option value="">(select port...)</option>');
+        $('#page_configure_interfaces_zwaveport').append('<option value="">' + HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_placeholder') + '</option>');
         if (ports.length == 0) {
             $('#page_configure_interfaces_zwaveport').append('<option value="">NO SERIAL PORTS FOUND</option>');
         }
@@ -299,7 +323,7 @@ HG.WebApp.SystemSettings.LoadSettings = function () {
             $('#page_configure_interfaces_zwaveport').val(data.ResponseValue);
             $('#page_configure_interfaces_zwaveport').selectmenu('refresh', true);
             //
-            $('#page_configure_interfaces_insteonport').empty().append('<option value="">(select port...)</option>');
+            $('#page_configure_interfaces_insteonport').empty().append('<option value="">' + HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_placeholder') + '</option>');
             for (var p = 0; p < ports.length; p++) {
                 $('#page_configure_interfaces_insteonport').append('<option value="' + ports[p] + '">' + ports[p] + '</option>');
             }
@@ -309,7 +333,7 @@ HG.WebApp.SystemSettings.LoadSettings = function () {
                 $('#page_configure_interfaces_insteonport').selectmenu('refresh', true);
             });
             //
-            $('#page_configure_interfaces_x10port').empty().append('<option value="">(select port...)</option>');
+            $('#page_configure_interfaces_x10port').empty().append('<option value="">' + HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_placeholder') + '</option>');
             $('#page_configure_interfaces_x10port').append('<option value="USB">CM15 Pro - USB</option>');
             for (var p = 0; p < ports.length; p++) {
                 $('#page_configure_interfaces_x10port').append('<option value="' + ports[p] + '">CM11 - ' + ports[p] + '</option>');
@@ -320,7 +344,7 @@ HG.WebApp.SystemSettings.LoadSettings = function () {
                 $('#page_configure_interfaces_x10port').selectmenu('refresh', true);
             });
             $('#page_configure_interfaces_w800rf32port').empty();
-            $('#page_configure_interfaces_w800rf32port').append('<option value="">(select port...)</option>');
+            $('#page_configure_interfaces_w800rf32port').append('<option value="">' + HG.WebApp.Locales.GetLocaleString('systemsettings_selectport_placeholder') + '</option>');
             for (var p = 0; p < ports.length; p++) {
                 $('#page_configure_interfaces_w800rf32port').append('<option value="' + ports[p] + '">' + ports[p] + '</option>');
             }
@@ -406,6 +430,10 @@ HG.WebApp.SystemSettings.ZWaveDiscovery = function (port) {
     $('#configure_system_zwavediscovery_log').empty();
     $('#systemsettings_zwavediscovery_popup').popup('open');
     $.get('/' + HG.WebApp.Data.ServiceKey + '/HomeAutomation.ZWave/0/Controller.Discovery/' + (new Date().getTime()), function (data) { });
+};
+
+HG.WebApp.SystemSettings.ZWaveHardReset = function (port) {
+    $.get('/' + HG.WebApp.Data.ServiceKey + '/HomeAutomation.ZWave/0/Controller.HardReset/' + (new Date().getTime()), function (data) { });
 };
 
 HG.WebApp.SystemSettings.ZWaveNodeAdd = function (port) {

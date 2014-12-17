@@ -367,8 +367,10 @@ HG.WebApp.GroupModules.DeleteGroupModule = function (groupname, module) {
 HG.WebApp.GroupModules.DeleteGroup = function (group) {
     $.mobile.loading('show');
     HG.Configure.Groups.DeleteGroup('Control', group, function () {
-        $.mobile.changePage($('#page_configure_groups'), { transition: "slide" });
         $.mobile.loading('hide');
+        setTimeout(function(){
+            $.mobile.changePage($('#page_configure_groups'));
+        }, 200);
     });
     $('#control_groupslist').empty();
     HG.WebApp.Data._CurrentGroupIndex = 0;
@@ -420,7 +422,7 @@ HG.WebApp.GroupModules.LoadGroupModules = function () {
 	        html += '<td style="padding-left:10px"><span>' + groupmodules.Modules[m].Name + '</span></td></tr>';
 	        html += '<tr><td style="padding-left:10px"><span style="color:gray">' + domain_label + '</span> ' + address_label + ' ' + groupmodules.Modules[m].Address + '</td>';
 	        html += '</tr></table></a>';
-	        html += '<a href="#page_configure_groupmodules_propspopup" data-rel="popup" data-transition="pop">Module Parameters</a>';
+	        html += '<a href="#page_configure_groupmodules_propspopup" data-rel="popup" data-transition="pop">'+HG.WebApp.Locales.GetLocaleString('configure_module_parameters_linktitle')+'</a>';
 	        html += '</li>';
 		}
     }
